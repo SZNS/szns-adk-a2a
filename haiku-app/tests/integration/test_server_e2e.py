@@ -139,7 +139,7 @@ def test_chat_stream(server_fixture: subprocess.Popen[str]) -> None:
         "session_id": session_id,
         "new_message": {
             "role": "user",
-            "parts": [{"text": "What's the weather in San Francisco?"}],
+            "parts": [{"text": "Can you write me a haiku about dogs?"}],
         },
         "streaming": True,
     }
