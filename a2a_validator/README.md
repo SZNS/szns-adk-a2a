@@ -36,8 +36,8 @@ This sample uses the Agent Development Kit (ADK) to create a simple fun facts ge
 5. Run the ADK Web Server
 
     ```bash
-    # In a separate terminal, run the adk web server
-    adk web a2a_validator/
+    # In a separate terminal, run the adk web server at the project root
+    adk web
     ```
 
   In the Web UI, select the `a2a_validator` agent.
