@@ -213,3 +213,7 @@ deployment_metadata.json
 .gradio_cache/
 gradio_cached_examples/
 .gradio/
+
+# Scratch files
+scratch/
+.scratch/
