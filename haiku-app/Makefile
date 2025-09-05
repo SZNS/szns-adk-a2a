@@ -14,21 +14,23 @@ playground:
 	uv run adk web . --port 8501 --reload_agents
 
 # Deploy the agent remotely
-# Usage: make backend [IAP=true] [PORT=8080] - Set IAP=true to enable Identity-Aware Proxy, PORT to specify container port
+# Usage: make backend [IAP=true] [PORT=8080] [A2AVALIDATORURL=your-A2A-haiku-validator-url]
+# Set IAP=true to enable Identity-Aware Proxy, PORT to specify container port
 backend:
-	PROJECT_ID=$$(gcloud config get-value project) && \
-	gcloud beta run deploy haiku-app \
-		--source . \
-		--memory "4Gi" \
-		--project $$PROJECT_ID \
-		--region "us-central1" \
-		--no-allow-unauthenticated \
-		--no-cpu-throttling \
-		--labels "created-by=adk" \
-		--set-env-vars \
-		"COMMIT_SHA=$(shell git rev-parse HEAD)" \
-		$(if $(IAP),--iap) \
-		$(if $(PORT),--port=$(PORT))
+    PROJECT_ID=$$(gcloud config get-value project) && \
+    gcloud beta run deploy haiku-app \
+        --source . \
+        --memory "4Gi" \
+        --project $$PROJECT_ID \
+        --region "us-central1" \
+        --no-allow-unauthenticated \
+        --no-cpu-throttling \
+        --labels "created-by=adk" \
+        --set-env-vars \
+        "COMMIT_SHA=$(shell git rev-parse HEAD)" \
+        $(if $(IAP),--iap) \
+        $(if $(PORT),--port=$(PORT)) \
+        $(if $(A2AVALIDATORURL),HAIKU_VALIDATOR_AGENT_URL=$(A2AVALIDATORURL))
 
 # Launch local development server with hot-reload
 local-backend:

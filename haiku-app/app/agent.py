@@ -25,6 +25,10 @@ os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "True")
 
 from .sub_agents.haiku_validator.agent import haiku_validator_agent
 
+from .tools import (
+   validate_haiku_with_external_agent
+)
+
 PROMPT = """
 You are a haiku generator. 
 Ask the user for a topic or an idea to create a haiku.
@@ -33,6 +37,12 @@ If the user asks you to say or repeat the haiku in a louder voice, use the loude
 
 If the user asks you to validate the haiku, use the haiku_validator_agent tool.
 """
+
+# For our haiku validator, we can use this toggle to switch between our embedded sub-agent validation within the ADK app,
+# or use an externally hosted A2A server, which we can call with a function tool
+SHOULD_USE_EXTERNAL_A2A_VALIDATOR = True
+haiku_validator_agent = validate_haiku_with_external_agent if SHOULD_USE_EXTERNAL_A2A_VALIDATOR else AgentTool(agent=haiku_validator_agent)
+
 
 def louder_haiku(text: str) -> str:
     """Converts the entire text block to uppercase."""
@@ -44,7 +54,7 @@ root_agent = Agent(
     model="gemini-2.5-flash",
     instruction=PROMPT,
     tools=[
-        AgentTool(agent=haiku_validator_agent),
-        louder_haiku
+        louder_haiku,
+        haiku_validator_agent
         ],
 )

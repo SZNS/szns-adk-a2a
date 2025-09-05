@@ -1,0 +1,3 @@
+# Any new environment variables should be updated in both .env files for loca development
+# and in the Makefile "backend" command so it is properly passed to the Cloud Run instance on deployments
+HAIKU_VALIDATOR_AGENT_URL=http://localhost:8001

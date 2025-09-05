@@ -13,6 +13,7 @@ dependencies = [
     "fastapi~=0.115.8",
     "uvicorn~=0.34.0",
     "psycopg2-binary>=2.9.10",
+    "google-adk[a2a]", # Added post starter pack generation for A2A
 ]
 
 requires-python = ">=3.10,<3.14"

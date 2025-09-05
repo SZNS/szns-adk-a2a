@@ -21,11 +21,15 @@ This sample uses the Agent Development Kit (ADK) to create a simple fun facts ge
     pip install -r requirements.txt
     ```
 
-3. Create a `.env` file with your Gemini API Key:
+3. Create a `.env` file by coping the `.sample-env` and filling out the correct values:
 
-   ```bash
-   echo "GOOGLE_API_KEY=your_api_key_here" > .env
-   ```
+    ```bash
+    GOOGLE_API_KEY=<your_key>
+    GOOGLE_CLOUD_PROJECT=<your_project>
+    GOOGLE_CLOUD_LOCATION=<your_region>
+    GOOGLE_CLOUD_REGION=${GOOGLE_CLOUD_LOCATION}
+    GEMINI_API_KEY=${GOOGLE_API_KEY}
+    ```
 
 4. Run the A2A agent:
 
