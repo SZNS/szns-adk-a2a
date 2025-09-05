@@ -17,6 +17,7 @@ import os
 import google.auth
 from google.adk.agents import Agent
 from google.adk.tools.agent_tool import AgentTool
+from google.adk.tools.mcp_tool import MCPToolset, StreamableHTTPConnectionParams
 
 _, project_id = google.auth.default()
 os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
@@ -55,6 +56,11 @@ root_agent = Agent(
     instruction=PROMPT,
     tools=[
         louder_haiku,
-        haiku_validator_agent
+        haiku_validator_agent,
+        MCPToolset(
+            connection_params=StreamableHTTPConnectionParams(
+                url=os.getenv("MCP_HAIKU_STORE_SERVER_URL", "http://localhost:8075/mcp")
+            )
+        )
         ],
 )

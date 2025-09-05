@@ -49,7 +49,7 @@ async def _call_a2a_agent(
     try:
 
         http_args = {
-            "timeout": 5.0,
+            "timeout": 10.0,
         }
         
         # Preferred method: Fetch the full agent card for complete configuration.

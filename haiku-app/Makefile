@@ -14,23 +14,28 @@ playground:
 	uv run adk web . --port 8501 --reload_agents
 
 # Deploy the agent remotely
-# Usage: make backend [IAP=true] [PORT=8080] [A2AVALIDATORURL=your-A2A-haiku-validator-url]
+# Usage: make backend [IAP=true] [PORT=8080] [A2AVALIDATORURL=your-A2A-haiku-validator-url] [MCPSTOREURL=your-MCP-haiku-store-url]
 # Set IAP=true to enable Identity-Aware Proxy, PORT to specify container port
 backend:
-    PROJECT_ID=$$(gcloud config get-value project) && \
-    gcloud beta run deploy haiku-app \
-        --source . \
-        --memory "4Gi" \
-        --project $$PROJECT_ID \
-        --region "us-central1" \
-        --no-allow-unauthenticated \
-        --no-cpu-throttling \
-        --labels "created-by=adk" \
-        --set-env-vars \
-        "COMMIT_SHA=$(shell git rev-parse HEAD)" \
-        $(if $(IAP),--iap) \
-        $(if $(PORT),--port=$(PORT)) \
-        $(if $(A2AVALIDATORURL),HAIKU_VALIDATOR_AGENT_URL=$(A2AVALIDATORURL))
+	ENV_VARS="COMMIT_SHA='$(shell git rev-parse HEAD)'"; \
+	if [ -n "$(A2AVALIDATORURL)" ]; then \
+		ENV_VARS="$${ENV_VARS},HAIKU_VALIDATOR_AGENT_URL=$(A2AVALIDATORURL)"; \
+	fi; \
+	if [ -n "$(MCPSTOREURL)" ]; then \
+		ENV_VARS="$${ENV_VARS},MCP_HAIKU_STORE_SERVER_URL=$(MCPSTOREURL)"; \
+	fi; \
+	PROJECT_ID=$$(gcloud config get-value project); \
+	gcloud beta run deploy haiku-app \
+		--source . \
+		--memory "4Gi" \
+		--project $$PROJECT_ID \
+		--region "us-central1" \
+		--no-allow-unauthenticated \
+		--no-cpu-throttling \
+		--labels "created-by=adk" \
+		--set-env-vars="$$ENV_VARS" \
+		$(if $(IAP),--iap) \
+		$(if $(PORT),--port=$(PORT))
 
 # Launch local development server with hot-reload
 local-backend:
