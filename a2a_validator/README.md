@@ -45,7 +45,7 @@ This sample uses the Agent Development Kit (ADK) to create a simple fun facts ge
 ## Deploy to Google Cloud Run
 
 ```sh
-gcloud run deploy a2a_validator \
+gcloud run deploy a2a-validator \
     --port=8080 \
     --source=. \
     --allow-unauthenticated \
