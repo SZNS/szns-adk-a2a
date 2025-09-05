@@ -41,7 +41,7 @@ If the user asks you to validate the haiku, use the haiku_validator_agent tool.
 
 # For our haiku validator, we can use this toggle to switch between our embedded sub-agent validation within the ADK app,
 # or use an externally hosted A2A server, which we can call with a function tool
-SHOULD_USE_EXTERNAL_A2A_VALIDATOR = True
+SHOULD_USE_EXTERNAL_A2A_VALIDATOR = False
 haiku_validator_agent = validate_haiku_with_external_agent if SHOULD_USE_EXTERNAL_A2A_VALIDATOR else AgentTool(agent=haiku_validator_agent)
 
 
@@ -56,11 +56,17 @@ root_agent = Agent(
     instruction=PROMPT,
     tools=[
         louder_haiku,
-        haiku_validator_agent,
-        MCPToolset(
-            connection_params=StreamableHTTPConnectionParams(
-                url=os.getenv("MCP_HAIKU_STORE_SERVER_URL", "http://localhost:8075/mcp")
-            )
-        )
+        
+        # Uncomment when ready
+        
+        # haiku_validator_agent,
+        
+        # Uncomment when ready
+        
+        # MCPToolset(
+        #     connection_params=StreamableHTTPConnectionParams(
+        #         url=os.getenv("MCP_HAIKU_STORE_SERVER_URL", "http://localhost:8075/mcp")
+        #     )
+        # )
         ],
 )

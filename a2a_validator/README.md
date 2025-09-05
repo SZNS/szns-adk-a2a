@@ -1,6 +1,6 @@
 # ADK Agent
 
-This sample uses the Agent Development Kit (ADK) to create a simple fun facts generator which communicates using A2A.
+This sample uses the Agent Development Kit (ADK) to create a haiku validator which communicates using A2A.
 
 ## Prerequisites
 
@@ -53,6 +53,7 @@ gcloud run deploy a2a-validator \
     --port=8080 \
     --source=. \
     --allow-unauthenticated \
+    --min-instances=1 \
     --region="us-central1" \
     --project=$GOOGLE_CLOUD_PROJECT \
     --set-env-vars=GOOGLE_CLOUD_PROJECT=$GOOGLE_CLOUD_PROJECT,GOOGLE_CLOUD_LOCATION=us-central1,GOOGLE_GENAI_USE_VERTEXAI=true
