@@ -1,7 +1,10 @@
 import os
+from dotenv import load_dotenv
 
 from google.adk import Agent
 from google.adk.a2a.utils.agent_to_a2a import to_a2a
+
+load_dotenv()
 
 PROMPT = """
 You are a haiku validator.
