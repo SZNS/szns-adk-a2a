@@ -80,7 +80,7 @@ async def _call_a2a_agent(
     request = SendMessageRequest(id=str(uuid4()), params=params)
     return await client.send_message(request)
 
-async def validate_haiku_with_external_agent(haiku: str, tool_context: ToolContext) -> dict:
+async def validate_haiku_with_external_agent(haiku: str) -> dict:
     """
     Calls an external A2A agent to validate a haiku.
     """
@@ -107,8 +107,6 @@ async def validate_haiku_with_external_agent(haiku: str, tool_context: ToolConte
                 error_details = response.root.error.model_dump_json(indent=2)
                 return {"status": "error", "message": f"Validator agent returned a non-success response: {error_details}"}
 
-            logger.info("1 ###")
-            logger.info("2 ###")
             task = response.root.result
             if not isinstance(task, Task):
                 return {"status": "error", "message": "Validator agent response did not contain a valid Task object."}

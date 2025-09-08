@@ -25,6 +25,7 @@ Return your response in the following format:
 
 root_agent = Agent(
     name="haiku_validator_agent",
+    description="An ADK agent that validates haikus based on structure and literary quality.",
     model="gemini-2.5-flash",
     instruction=PROMPT,
     output_key="haiku_validator_agent_output",

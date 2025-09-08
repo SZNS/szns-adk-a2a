@@ -26,7 +26,6 @@ class Haiku(SQLModel, table=True):
     text: str
     score: int = Field(ge=1, le=100) # Score must be between 1 and 100
 
-# Function to create the database and table
 def create_db_and_tables():
     # If the database file exists, delete it to start fresh on each run
     if os.path.exists(DATABASE_FILE):
@@ -41,11 +40,6 @@ def create_db_and_tables():
         session.add(haiku_2)
         session.add(haiku_3)
         session.commit()
-
-# Dependency to get the database session
-def get_session():
-    with Session(engine) as session:
-        yield session
 
 mcp = FastMCP("Haiku Store")
 
@@ -111,11 +105,6 @@ def delete_haiku(haiku_id: int) -> Dict[str, Any]:
         session.delete(haiku)
         session.commit()
         return {"ok": True, "message": "Haiku deleted successfully"}
-
-@mcp.tool
-def greet(name: str) -> str:
-    return f"Hello, {name}!"
-
 
 if __name__ == "__main__":
     logger.info(f" MCP server started on port {os.getenv('PORT', 8075)}")

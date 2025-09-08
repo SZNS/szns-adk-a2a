@@ -14,7 +14,7 @@ This sample uses FastMCP to create a simple REST API to manage haikus in-memory 
     cd mcp-haiku-store
     ```
 
-4. Run the MCP server agent:
+2. Run the MCP server agent:
 
     ```bash
     # Runs at port 8075 locally
@@ -22,7 +22,7 @@ This sample uses FastMCP to create a simple REST API to manage haikus in-memory 
     uv run server.py
     ```
 
-5. Test the MCP server
+3. Test the MCP server
 
     ```bash
     # In a separate terminal, cd back into the mcp-haiku-store directory

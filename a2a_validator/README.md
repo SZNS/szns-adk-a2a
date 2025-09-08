@@ -15,10 +15,12 @@ This sample uses the Agent Development Kit (ADK) to create a haiku validator whi
     cd a2a_validator
     ```
 
-2. Install Requirements
+2. Create a virtual environment and install requirements:
 
     ```bash
-    pip install -r requirements.txt
+    uv venv
+    source .venv/bin/activate
+    uv pip install -r requirements.txt
     ```
 
 3. Create a `.env` file by coping the `.sample-env` and filling out the correct values:
