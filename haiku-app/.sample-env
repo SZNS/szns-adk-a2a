@@ -1,7 +1,7 @@
-# Any new environment variables should be updated in both .env files for loca development
+# Any new environment variables should be updated in both .env files for local development
 # and in the Makefile "backend" command so it is properly passed to the Cloud Run instance on deployments
 
 HAIKU_VALIDATOR_AGENT_URL=http://localhost:8001
 
-# Remeber to keep the /mcp on the end of this URL when you replace it in your real .env file
+# Remember to keep the /mcp on the end of this URL when you replace it in your real .env file
 MCP_HAIKU_STORE_SERVER_URL=http://localhost:8075/mcp

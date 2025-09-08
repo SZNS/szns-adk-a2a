@@ -81,6 +81,11 @@ gcloud config set project <your-dev-project-id>
 make backend
 ```
 
+If using the A2A Validator or the MCP Haiku Store:
+
+```bash
+make backend A2AVALIDATORURL=<A2A_URL> MCPSTOREURL=<MCP_URL> IAP=true
+```
 
 The repository includes a Terraform configuration for the setup of the Dev Google Cloud project.
 See [deployment/README.md](deployment/README.md) for instructions.
