@@ -1,5 +1,4 @@
-# Haiku Demo with ADK, A2A, and MCP
-
+# Haikus with ADK, A2A, and MCP
 
 This project contains a multi-component system for generating, validating, and storing haikus. It is a "Hello World" example for building with the Google Agent Development Kit (ADK), the A2A framework, and an MCP server.
 
@@ -13,7 +12,7 @@ This repository is a monorepo containing the following services:
 
 ## System Overview
 
-![Haiku ADK App](assets/haiku_ui.png)
+![Haiku ADK App](assets/haiku_generate.png)
 
 The `haiku-app` is the entry point for user interaction. The `haiku-app` will ask a user for a topic to generate a haiku about. Once generated, the user is free to either:
 
