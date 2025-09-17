@@ -205,3 +205,18 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# ADK
+deployment_metadata.json
+
+# Gradio-specific
+.gradio_cache/
+gradio_cached_examples/
+.gradio/
+
+# MCP specific
+*.db
+
+# Scratch files
+scratch/
+.scratch/
