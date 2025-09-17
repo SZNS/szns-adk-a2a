@@ -28,15 +28,29 @@ The `haiku-app` is the entry point for user interaction. The `haiku-app` will as
 - [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) 
 - [uv](https://docs.astral.sh/uv/getting-started/installation/) (Optional, Python package management) 
 
-Google cloud services to enable: 
+Prerequisite commands to setup the Google Cloud project:
 ```bash
+# Authenticate with gcloud CLI
+gcloud auth login
+
+# Authenticate for local development code (ADC)
+gcloud auth application-default login
+
+# Create a new Google Cloud project
+gcloud projects create PROJECT_ID
+
+# Set your project
+export PROJECT_ID=<YOUR_PROJECT_ID>
+gcloud config set project $PROJECT_ID
+
+# Enable necessary services
 gcloud services enable cloudresourcemanager.googleapis.com \
                        servicenetworking.googleapis.com \
                        run.googleapis.com \
                        cloudbuild.googleapis.com \
                        artifactregistry.googleapis.com \
                        aiplatform.googleapis.com \
-                       compute.googleapis.com
+                       compute.googleapis.com 
 ```
 
 To run the complete system, you'll need to run each of the three services in a separate terminal.
