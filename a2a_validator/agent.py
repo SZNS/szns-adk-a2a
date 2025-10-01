@@ -31,4 +31,6 @@ root_agent = Agent(
     output_key="haiku_validator_agent_output",
 )
 
-a2a_app = to_a2a(root_agent, port=int(os.getenv('PORT', '8001')))
+port = int(os.getenv('PORT', '8001'))
+
+a2a_app = to_a2a(root_agent, port=port)

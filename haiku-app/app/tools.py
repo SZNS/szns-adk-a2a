@@ -4,7 +4,7 @@ import json
 import httpx
 import logging
 from typing import Any
-from uuid import uuid4
+from uuid import uuid4, UUID
 
 from google.adk.tools import ToolContext
 from a2a.client import A2ACardResolver, A2AClient
@@ -27,10 +27,10 @@ def _extract_json_from_markdown(text: str) -> str:
     # If no markdown block is found, assume the whole string might be the JSON
     return text
 
-async def _call_a2a_agent(
+async def _invoke_a2a_agent(
     base_url: str, prompt_text: str, httpx_client: httpx.AsyncClient
-) -> Any:
-    """
+) -> dict:
+    """Agnostic helper to call any external A2A agent and handle responses.
     A reusable helper to call an external A2A agent.
 
     Args:
@@ -39,10 +39,10 @@ async def _call_a2a_agent(
         httpx_client: An active httpx.AsyncClient instance.
 
     Returns:
-        The response object from the agent.
+        A dictionary with the result or an error message.
     """
     resolver = A2ACardResolver(
-        httpx_client=httpx_client,
+        httpx_client=httpx_client, 
         base_url=base_url,
     )
 
@@ -78,57 +78,92 @@ async def _call_a2a_agent(
 
     params = MessageSendParams.model_validate(payload)
     request = SendMessageRequest(id=str(uuid4()), params=params)
-    return await client.send_message(request)
+    response = await client.send_message(request)
+
+    # --- Robust Response Handling ---
+    logger.info("A2A response: %s", response.model_dump(mode='json', exclude_none=True))
+    if not isinstance(response.root, SendMessageSuccessResponse):
+        error_details = response.root.error.model_dump_json(indent=2)
+        return {"status": "error", "message": f"Agent returned a non-success response: {error_details}"}
+
+    task = response.root.result
+    if not isinstance(task, Task):
+        return {"status": "error", "message": "Agent response did not contain a valid Task object."}
+
+    # Null-safe check for nested artifacts and parts before access.
+    if not task.artifacts or not task.artifacts[0].parts:
+        return {"status": "error", "message": "Agent response task did not contain any artifacts or parts.", "raw_response": response.model_dump_json()}
+
+    # Return the raw text content for the specific handlers to parse.
+    return {"status": "success", "content": task.artifacts[0].parts[0].root.text}
+
+async def _generic_a2a_tool_handler(
+    env_var_name: str, prompt_text: str, response_parser: callable
+) -> dict:
+    """
+    A generic handler for calling an external A2A tool.
+
+    This function encapsulates the logic for:
+    1. Reading the agent URL from an environment variable.
+    2. Making the A2A call using the agnostic _invoke_a2a_agent helper.
+    3. Handling common errors (network, unexpected exceptions).
+    4. Passing the successful response content to a specific parser function.
+
+    Args:
+        env_var_name: The name of the environment variable holding the agent's URL.
+        prompt_text: The text to send to the external agent.
+        response_parser: A function that takes the raw text response and processes it.
+
+    Returns:
+        A dictionary with the final result or an error.
+    """
+    base_url = os.getenv(env_var_name)
+    if not base_url:
+        return {"status": "error", "message": f"{env_var_name} environment variable is not set."}
+
+    try:
+        async with httpx.AsyncClient() as httpx_client:
+            result = await _invoke_a2a_agent(base_url, prompt_text, httpx_client)
+
+        return response_parser(result)
+    except httpx.RequestError as e:
+        return {"status": "error", "message": f"Network error calling agent at {env_var_name}: {e}"}
+    except Exception as e:
+        return {"status": "error", "message": f"An unexpected error occurred calling agent at {env_var_name}: {e}"}
 
 async def validate_haiku_with_external_agent(haiku: str) -> dict:
     """
     Calls an external A2A agent to validate a haiku.
     """
-
-    base_url = os.getenv("HAIKU_VALIDATOR_AGENT_URL")
+    base_url = os.getenv("HAIKU_VALIDATOR_AGENT_URL", "http://localhost:8002")
     if not base_url:
         return {"status": "error", "message": "HAIKU_VALIDATOR_AGENT_URL environment variable is not set."}
 
-    # For more advanced agents, or in future versions, this string can be augmented with additional context.
-    prompt_for_validator = haiku
+    def _parse_validator_response(result: dict) -> dict:
+        """Parses the JSON response from the validator agent."""
+        if result["status"] != "success":
+            return result
+        validator_output_str = result.get("content")
+        if not validator_output_str:
+            return {"status": "error", "message": "Validator agent returned an empty response.", "raw_response": result}
+        try:
+            clean_json_str = _extract_json_from_markdown(validator_output_str)
+            return {"status": "success", "validation_result": json.loads(clean_json_str)}
+        except json.JSONDecodeError:
+            return {"status": "error", "message": "Failed to parse JSON from validator agent's response.", "raw_response": validator_output_str}
 
-    try:
-        async with httpx.AsyncClient() as httpx_client:
-            # Call the reusable A2A helper function
-            response = await _call_a2a_agent(
-                base_url=base_url,
-                prompt_text=prompt_for_validator,
-                httpx_client=httpx_client,
-            )
+    return await _generic_a2a_tool_handler("HAIKU_VALIDATOR_AGENT_URL", haiku, _parse_validator_response)
 
-            # Following a robust response handling pattern
-            logger.info("Validator response: %s", response.model_dump(mode='json', exclude_none=True))
-            if not isinstance(response.root, SendMessageSuccessResponse):
-                error_details = response.root.error.model_dump_json(indent=2)
-                return {"status": "error", "message": f"Validator agent returned a non-success response: {error_details}"}
+async def call_utility_a2a(prompt: str) -> dict:
+    """Calls the external A2A utility agent with a given prompt."""
+    base_url = os.getenv("HAIKU_UTILITIES_AGENT_URL", "http://localhost:8002")
+    if not base_url:
+        return {"status": "error", "message": "HAIKU_UTILITIES_AGENT_URL environment variable is not set."}
+    
+    def _parse_utility_response(result: dict) -> dict:
+        """Handles the plain-text response from the utility agent."""
+        if result["status"] != "success":
+            return result
+        return {"status": "success", "result_text": result.get("content", "")}
 
-            task = response.root.result
-            if not isinstance(task, Task):
-                return {"status": "error", "message": "Validator agent response did not contain a valid Task object."}
-
-            # Null-safe check for nested artifacts and parts before access.
-            if not task.artifacts or not task.artifacts[0].parts:
-                return {"status": "error", "message": "Validator agent response task did not contain any artifacts or parts.", "raw_response": response.model_dump_json()}
-
-            validator_output_str = task.artifacts[0].parts[0].root.text
-
-            if validator_output_str:
-                try:
-                    clean_json_str = _extract_json_from_markdown(validator_output_str)
-                    validator_output_json = json.loads(clean_json_str)
-                    return {"status": "success", "validation_result": validator_output_json}
-                except json.JSONDecodeError:
-                    return {"status": "error", "message": "Failed to parse JSON from validator agent's response.", "raw_response": validator_output_str}
-
-            # If we reach here, the response was successful but the content was empty.
-            return {"status": "error", "message": "Validator agent returned an empty response.", "raw_response": response.model_dump_json()}
-
-    except httpx.RequestError as e:
-        return {"status": "error", "message": f"Network error calling external validator agent: {e}"}
-    except Exception as e:
-        return {"status": "error", "message": f"An unexpected error occurred while calling external validator agent: {e}"}
+    return await _generic_a2a_tool_handler("HAIKU_UTILITIES_AGENT_URL", prompt, _parse_utility_response)
