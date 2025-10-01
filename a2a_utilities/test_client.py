@@ -1,12 +1,12 @@
 """
-A client script to send a haiku for validation to a remote agent.
+A client script to send a command to the haiku utility agent.
 
 This script initializes an A2AClient, fetches the agent's capabilities
-from its "agent card," and then sends a haiku as a text message.
+from its "agent card," and then sends a prompt as a text message.
 The agent's response is printed to the console.
 
 Usage:
-    python haiku_validator_client.py --base-url <AGENT_BASE_URL>
+    python test_client.py --base-url <AGENT_BASE_URL>
 """
 
 import argparse
@@ -21,7 +21,9 @@ from a2a.client import A2ACardResolver, A2AClient
 from a2a.types import (
     AgentCard,
     MessageSendParams,
+    SendMessageSuccessResponse,
     SendMessageRequest,
+    Task,
 )
 from a2a.utils.constants import (
     AGENT_CARD_WELL_KNOWN_PATH,
@@ -84,13 +86,15 @@ async def fetch_and_select_agent_card(resolver: A2ACardResolver, base_url: str) 
         raise RuntimeError('Failed to fetch the public agent card. Cannot continue.') from e
 
 
-async def validate_haiku_with_agent(haiku_text: str, base_url: str) -> None:
+async def call_utility_agent(prompt_text: str, base_url: str) -> str:
     """
-    Initializes a client, sends a haiku to the agent, and prints the response.
+    Initializes a client, sends a prompt to the agent, and prints the response.
 
     Args:
-        haiku_text: The haiku to send to the agent for validation.
+        prompt_text: The prompt to send to the agent.
         base_url: The base URL of the deployed agent.
+    Returns:
+        The text content of the agent's response, or an error message.
     """
     async with httpx.AsyncClient() as httpx_client:
         resolver = A2ACardResolver(httpx_client=httpx_client, base_url=base_url)
@@ -102,7 +106,7 @@ async def validate_haiku_with_agent(haiku_text: str, base_url: str) -> None:
         message_payload: dict[str, Any] = {
             'message': {
                 'role': 'user',
-                'parts': [{'type': 'text', 'text': haiku_text}],
+                'parts': [{'type': 'text', 'text': prompt_text}],
                 'messageId': uuid4().hex,
             },
         }
@@ -110,36 +114,75 @@ async def validate_haiku_with_agent(haiku_text: str, base_url: str) -> None:
             id=str(uuid4()), params=MessageSendParams(**message_payload)
         )
 
-        logger.info(f"Sending haiku for validation:\n---\n{haiku_text}\n---")
+        logger.info(f"Sending prompt to utility agent:\n---\n{prompt_text}\n---")
         response = await client.send_message(request)
 
-        print("\n--- Agent Response ---")
-        print(response.model_dump_json(indent=2, exclude_none=True))
-        print("----------------------\n")
+        # Extract the text from the response
+        if isinstance(response.root, SendMessageSuccessResponse) and isinstance(response.root.result, Task):
+            task = response.root.result
+            if task.artifacts and task.artifacts[0].parts:
+                result_text = task.artifacts[0].parts[0].root.text
+                logger.info(f"Received response: {result_text[:100]}...")
+                return result_text
+
+        return f"Error: Failed to get a valid text response. Full response: {response.model_dump_json()}"
 
 
 async def main() -> None:
     """
-    Parses command-line arguments and runs the haiku validation.
+    Parses command-line arguments and runs the haiku utility agent test.
     Usage:
-        python test_client.py --base-url http://localhost:8001
+        python test_client.py --base-url http://localhost:8002
     """
-    parser = argparse.ArgumentParser(description='Send a haiku to an A2A agent for validation.')
+    parser = argparse.ArgumentParser(description='Send a command to the A2A haiku utility agent.')
     parser.add_argument(
         '--base-url',
         required=True,
-        help='The base URL of the deployed haiku validator agent.',
+        help='The base URL of the deployed haiku utility agent.',
     )
     args = parser.parse_args()
 
-    # A classic haiku by Matsuo Bashō to test the agent.
-    haiku_to_validate = (
+    # A classic haiku by Matsuo Bashō and a command to test the agent.
+    haiku = (
         "An old silent pond...\n"
         "A frog jumps into the pond—\n"
         "Splash! Silence again."
     )
 
-    await validate_haiku_with_agent(haiku_text=haiku_to_validate, base_url=args.base_url)
+    test_cases = [
+        {"name": "Spooky Case", "prompt": f"Please transform the following haiku into Spooky Case:\n\n{haiku}"},
+        {"name": "Louder", "prompt": f"Please make this haiku louder:\n\n{haiku}"},
+        {"name": "Quieter", "prompt": f"Can you make this haiku quieter?\n\n{haiku}"},
+        {"name": "Make Choppy", "prompt": f"Please make the following haiku choppy:\n\n{haiku}"},
+    ]
+
+    results = []
+    for case in test_cases:
+        print(f"\n{'='*20} RUNNING TEST: {case['name'].upper()} {'='*20}")
+        result_text = await call_utility_agent(prompt_text=case['prompt'], base_url=args.base_url)
+        results.append({"name": case['name'], "output": result_text})
+        # A small delay between requests to make the log output easier to read
+        await asyncio.sleep(1)
+
+    print(f"\n\n{'='*25} ALL TESTS COMPLETE {'='*25}")
+    print("Aggregating results into a summary table...")
+
+    # --- Print Results Table ---
+    # Determine column widths
+    max_name_len = max(len(r['name']) for r in results)
+    col_width_name = max(max_name_len, len("Transformation")) + 2
+
+    # Header
+    print("\n" + "-" * 80)
+    print(f"| {'Transformation'.ljust(col_width_name)}| {'Result'.ljust(80 - col_width_name - 4)} |")
+    print(f"|{'-' * (col_width_name + 1)}|{'-' * (80 - col_width_name - 3)}|")
+
+    # Rows
+    for res in results:
+        # Replace newlines in the output for clean table formatting
+        cleaned_output = res['output'].replace('\n', ' ')
+        print(f"| {res['name'].ljust(col_width_name)}| {cleaned_output.ljust(80 - col_width_name - 4)} |")
+    print("-" * 80 + "\n")
 
 
 if __name__ == '__main__':
