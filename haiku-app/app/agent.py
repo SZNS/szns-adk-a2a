@@ -16,8 +16,7 @@ import os
 
 import google.auth
 from google.adk.agents import Agent
-from google.adk.agents.remote_a2a_agent import RemoteA2aAgent
-from google.adk.agents.remote_a2a_agent import AGENT_CARD_WELL_KNOWN_PATH
+from google.adk.agents.remote_a2a_agent import RemoteA2aAgent, AGENT_CARD_WELL_KNOWN_PATH
 from .sub_agents.haiku_validator.agent import haiku_validator_agent as validator_local_agent
 
 _, project_id = google.auth.default()
