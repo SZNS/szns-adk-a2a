@@ -18,7 +18,7 @@ async def call_validator_a2a(haiku: str) -> dict:
     """
     Calls an external A2A agent to validate a haiku.
     """
-    base_url = os.getenv("HAIKU_VALIDATOR_AGENT_URL", "http://localhost:8002")
+    base_url = os.getenv("HAIKU_VALIDATOR_AGENT_URL", "http://localhost:8001")
     if not base_url:
         return {"status": "error", "message": "HAIKU_VALIDATOR_AGENT_URL environment variable is not set."}
 

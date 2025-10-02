@@ -30,6 +30,25 @@ from .tools import (
    call_utility_a2a,
 )
 
+validator_a2a_url = os.getenv("HAIKU_VALIDATOR_AGENT_URL", "http://localhost:8001")
+utilities_a2a_url = os.getenv("HAIKU_UTILITIES_AGENT_URL", "http://localhost:8002")
+
+validator_agent = RemoteA2aAgent(
+    name="validator_agent",
+    description="Agent that handles haiku validation.",
+    agent_card=(
+        f"{validator_a2a_url}/{AGENT_CARD_WELL_KNOWN_PATH}"
+    ),
+)
+
+utilities_agent = RemoteA2aAgent(
+    name="utilities_agent",
+    description="Agent that handles utility functions.",
+    agent_card=(
+        f"{utilities_a2a_url}/{AGENT_CARD_WELL_KNOWN_PATH}"
+    ),
+)
+
 PROMPT = """
 You are a haiku generator. 
 Ask the user for a topic or an idea to create a haiku.
@@ -63,9 +82,10 @@ root_agent = Agent(
         # louder_haiku,
         
         # Uncomment when needed
-        haiku_validator_agent,
+        #haiku_validator_agent,
 
         # Uncomment when needed
-        call_utility_a2a,
+        #call_utility_a2a,
         ],
+    sub_agents=[validator_agent, utilities_agent],
 )
