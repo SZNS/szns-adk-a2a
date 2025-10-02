@@ -1,11 +1,17 @@
-# ADK Agent
+# Haiku Validator A2A Agent
+
 
 This sample uses the Agent Development Kit (ADK) to create a haiku validator which communicates using A2A.
 
 ## Prerequisites
 
-- Python 3.10 or higher
-- Access to an LLM and API Key
+- Python 3.10+
+- [Google Cloud SDK](https://cloud.google.com/sdk/docs/install)
+- `make`
+    - The build automation tool to run a `Makefile`
+- [uv](https://docs.astral.sh/uv/getting-started/installation/)
+    - Python package management system
+    - More tightly coupled with ADK libraries and offers quicker development than `pip` alone
 
 ## Running the Sample
 

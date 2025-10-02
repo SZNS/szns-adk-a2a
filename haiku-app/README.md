@@ -81,7 +81,7 @@ gcloud config set project <your-dev-project-id>
 make backend
 ```
 
-If using the A2A Validator or the MCP Haiku Store:
+If using the A2A Validator or the A2A Utilities Agent:
 
 ```bash
 make backend A2AVALIDATORURL=<VALIDATOR_URL> UTILITIESURL=<UTILITIES_URL> IAP=true
