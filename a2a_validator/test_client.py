@@ -11,6 +11,7 @@ Usage:
 
 import argparse
 import asyncio
+import json
 import logging
 from typing import Any
 from uuid import uuid4
@@ -21,7 +22,9 @@ from a2a.client import A2ACardResolver, A2AClient
 from a2a.types import (
     AgentCard,
     MessageSendParams,
+    SendMessageSuccessResponse,
     SendMessageRequest,
+    Task,
 )
 from a2a.utils.constants import (
     AGENT_CARD_WELL_KNOWN_PATH,
@@ -113,9 +116,37 @@ async def validate_haiku_with_agent(haiku_text: str, base_url: str) -> None:
         logger.info(f"Sending haiku for validation:\n---\n{haiku_text}\n---")
         response = await client.send_message(request)
 
-        print("\n--- Agent Response ---")
-        print(response.model_dump_json(indent=2, exclude_none=True))
-        print("----------------------\n")
+        # --- Process and Summarize Response ---
+        print("\n--- Validation Result ---")
+        if not isinstance(response.root, SendMessageSuccessResponse):
+            error_details = response.root.error.model_dump_json(indent=2)
+            print(f"❌ Failure: Agent returned an error.\nDetails: {error_details}")
+            return
+
+        task = response.root.result
+        if not isinstance(task, Task) or not task.artifacts or not task.artifacts[0].parts:
+            print(f"❌ Failure: Agent response was malformed or empty.")
+            print(f"Raw Response: {response.model_dump_json(indent=2)}")
+            return
+
+        result_text = task.artifacts[0].parts[0].root.text
+        try:
+            # The model may wrap the JSON in markdown, so we extract it.
+            if "```" in result_text:
+                result_text = result_text.split("```")[1].strip("json\n")
+
+            validation_data = json.loads(result_text)
+            is_valid = validation_data.get("is_valid")
+            status_icon = "✅" if is_valid else "⚠️"
+
+            print(f"{status_icon} Validation Status: {'Valid' if is_valid else 'Invalid'}")
+            print(f"   - Score: {validation_data.get('score', 'N/A')}")
+            print(f"   - Feedback: {validation_data.get('feedback', 'N/A')}")
+        except (json.JSONDecodeError, IndexError) as e:
+            print(f"❌ Failure: Could not parse JSON from agent response.\nError: {e}")
+            print(f"Raw Text Received: {result_text}")
+        finally:
+            print("-------------------------\n")
 
 
 async def main() -> None:

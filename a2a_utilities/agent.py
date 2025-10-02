@@ -1,12 +1,11 @@
-import asyncio
 import os
 from dotenv import load_dotenv
-
 from google.adk import Agent
 from google.adk.a2a.utils.agent_to_a2a import to_a2a
-from google.adk.a2a.utils.agent_card_builder import AgentCardBuilder
 
 load_dotenv()
+
+SERVICE_NAME = "a2a-utilities"
 
 PROMPT = """
 You are a haiku utilities agent.
@@ -29,14 +28,7 @@ def quieter_haiku(text: str) -> str:
 
 def spooky_case(s: str) -> str:
     """
-    Alternates the case of all letters in a string, preserving newlines.
-    
-    Args:
-        s: The input string.
-        
-    Returns:
-        A new string with alternating lowercase and uppercase letters.
-        Example: "hello world\\nnew line" -> "hElLo wOrLd\\nnEw lInE"
+    Alternates the case of all letters in a string.
     """
     return '\n'.join(
         ''.join(c.upper() if i % 2 == 1 else c.lower() for i, c in enumerate(line))
@@ -45,14 +37,7 @@ def spooky_case(s: str) -> str:
 
 def make_choppy(s: str) -> str:
     """
-    Adds a period after each word in a string, preserving newlines.
-    
-    Args:
-        s: The input string.
-        
-    Returns:
-        A new string with a period appended to each word.
-        Example: "Hello world\\nAnother line" -> "Hello. world.\\nAnother. line."
+    Adds a period after each word in a string.
     """
     lines = s.splitlines()
     processed_lines = ['. '.join(line.split()) + '.' if line.strip() else '' for line in lines]
@@ -72,6 +57,18 @@ root_agent = Agent(
     output_key="haiku_utilities_agent_output",
 )
 
-port = int(os.getenv('PORT', '8002'))
+region = os.getenv('GOOGLE_CLOUD_REGION', 'us-central1')
+project_number = os.getenv('GOOGLE_PROJECT_NUMBER')
 
-a2a_app = to_a2a(root_agent, port=port)
+# Determine if running locally or in Cloud Run
+is_local = os.getenv('K_SERVICE') is None 
+
+# If deploying to Cloud Run, pre-generate the host URL according to 
+# Cloud Run's URL structure for use in the A2A Agent Card
+protocol = "http" if is_local else "https"
+host = "localhost" if is_local else f"{SERVICE_NAME}-{project_number}.{region}.run.app"
+
+# Use port 8002 for local testing, and 443 for Cloud Run, since it uses HTTPS
+port = 8002 if is_local else 443
+
+a2a_app = to_a2a(root_agent, host=host, port=port, protocol=protocol)

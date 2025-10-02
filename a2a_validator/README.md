@@ -54,7 +54,7 @@ This sample uses the Agent Development Kit (ADK) to create a haiku validator whi
 # Set project environment variable
 export GOOGLE_CLOUD_PROJECT=$(gcloud config get-value project)
 
-# Run deployment command in a2a_utilities directory
+# Run deployment command in a2a_validator directory
 gcloud run deploy a2a-validator \
     --port=8080 \
     --source=. \
@@ -62,5 +62,5 @@ gcloud run deploy a2a-validator \
     --min-instances=1 \
     --region="us-central1" \
     --project=$GOOGLE_CLOUD_PROJECT \
-    --set-env-vars=GOOGLE_CLOUD_PROJECT=$GOOGLE_CLOUD_PROJECT,GOOGLE_CLOUD_LOCATION=us-central1,GOOGLE_GENAI_USE_VERTEXAI=true
+    --set-env-vars=GOOGLE_CLOUD_PROJECT=$GOOGLE_CLOUD_PROJECT,GOOGLE_CLOUD_LOCATION=$GOOGLE_CLOUD_LOCATION,GOOGLE_GENAI_USE_VERTEXAI=true,GOOGLE_PROJECT_NUMBER=$GOOGLE_PROJECT_NUMBER
 ```

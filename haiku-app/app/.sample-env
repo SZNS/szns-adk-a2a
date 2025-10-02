@@ -3,6 +3,3 @@
 
 HAIKU_VALIDATOR_AGENT_URL=http://localhost:8001
 HAIKU_UTILITIES_AGENT_URL=http://localhost:8002
-
-# Remember to keep the /mcp on the end of this URL when you replace it in your real .env file
-MCP_HAIKU_STORE_SERVER_URL=http://localhost:8075/mcp
