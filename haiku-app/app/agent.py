@@ -17,6 +17,8 @@ import os
 import google.auth
 from google.adk.agents import Agent
 from google.adk.tools.agent_tool import AgentTool
+from google.adk.agents.remote_a2a_agent import RemoteA2aAgent
+from google.adk.agents.remote_a2a_agent import AGENT_CARD_WELL_KNOWN_PATH
 
 _, project_id = google.auth.default()
 os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
