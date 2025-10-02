@@ -3,10 +3,8 @@ import re
 import json
 import httpx
 import logging
-from typing import Any
-from uuid import uuid4, UUID
+from uuid import uuid4
 
-from google.adk.tools import ToolContext
 from a2a.client import A2ACardResolver, A2AClient
 from a2a.types import MessageSendParams, SendMessageRequest, SendMessageSuccessResponse, Task
 
@@ -16,16 +14,65 @@ logger = logging.getLogger(__name__)
 
 # --- A2A (Agent to Agent)  ---
 
-def _extract_json_from_markdown(text: str) -> str:
+async def call_validator_a2a(haiku: str) -> dict:
     """
-    Extracts a JSON string from a markdown code block, which LLMs often return.
+    Calls an external A2A agent to validate a haiku.
     """
-    # Regex to find a JSON block, being lenient with the language specifier (e.g., ```json)
-    match = re.search(r"```(?:json)?\s*({.*})\s*```", text, re.DOTALL)
-    if match:
-        return match.group(1)
-    # If no markdown block is found, assume the whole string might be the JSON
-    return text
+    base_url = os.getenv("HAIKU_VALIDATOR_AGENT_URL", "http://localhost:8002")
+    if not base_url:
+        return {"status": "error", "message": "HAIKU_VALIDATOR_AGENT_URL environment variable is not set."}
+
+    def _parse_validator_response(result: dict) -> dict:
+        """Parses the JSON response from the validator agent."""
+        if result["status"] != "success":
+            return result
+        validator_output_str = result.get("content")
+        if not validator_output_str:
+            return {"status": "error", "message": "Validator agent returned an empty response.", "raw_response": result}
+        try:
+            clean_json_str = _extract_json_from_markdown(validator_output_str)
+            return {"status": "success", "validation_result": json.loads(clean_json_str)}
+        except json.JSONDecodeError:
+            return {"status": "error", "message": "Failed to parse JSON from validator agent's response.", "raw_response": validator_output_str}
+
+    return await _generic_a2a_tool_handler("HAIKU_VALIDATOR_AGENT_URL", haiku, _parse_validator_response)
+
+async def call_utility_a2a(prompt: str) -> dict:
+    """Calls the external A2A utility agent with a given prompt."""
+    base_url = os.getenv("HAIKU_UTILITIES_AGENT_URL", "http://localhost:8002")
+    if not base_url:
+        return {"status": "error", "message": "HAIKU_UTILITIES_AGENT_URL environment variable is not set."}
+    
+    def _parse_utility_response(result: dict) -> dict:
+        """Handles the plain-text response from the utility agent."""
+        if result["status"] != "success":
+            return result
+        return {"status": "success", "result_text": result.get("content", "")}
+
+    return await _generic_a2a_tool_handler("HAIKU_UTILITIES_AGENT_URL", prompt, _parse_utility_response)
+
+
+# --- Helper Functions ---
+
+async def _generic_a2a_tool_handler(
+    env_var_name: str, prompt_text: str, response_parser: callable
+) -> dict:
+    """
+    A generic handler for calling an external A2A tool.
+    """
+    base_url = os.getenv(env_var_name)
+    if not base_url:
+        return {"status": "error", "message": f"{env_var_name} environment variable is not set."}
+
+    try:
+        async with httpx.AsyncClient() as httpx_client:
+            result = await _invoke_a2a_agent(base_url, prompt_text, httpx_client)
+
+        return response_parser(result)
+    except httpx.RequestError as e:
+        return {"status": "error", "message": f"Network error calling agent at {env_var_name}: {e}"}
+    except Exception as e:
+        return {"status": "error", "message": f"An unexpected error occurred calling agent at {env_var_name}: {e}"}
 
 async def _invoke_a2a_agent(
     base_url: str, prompt_text: str, httpx_client: httpx.AsyncClient
@@ -97,73 +144,13 @@ async def _invoke_a2a_agent(
     # Return the raw text content for the specific handlers to parse.
     return {"status": "success", "content": task.artifacts[0].parts[0].root.text}
 
-async def _generic_a2a_tool_handler(
-    env_var_name: str, prompt_text: str, response_parser: callable
-) -> dict:
+def _extract_json_from_markdown(text: str) -> str:
     """
-    A generic handler for calling an external A2A tool.
-
-    This function encapsulates the logic for:
-    1. Reading the agent URL from an environment variable.
-    2. Making the A2A call using the agnostic _invoke_a2a_agent helper.
-    3. Handling common errors (network, unexpected exceptions).
-    4. Passing the successful response content to a specific parser function.
-
-    Args:
-        env_var_name: The name of the environment variable holding the agent's URL.
-        prompt_text: The text to send to the external agent.
-        response_parser: A function that takes the raw text response and processes it.
-
-    Returns:
-        A dictionary with the final result or an error.
+    Extracts a JSON string from a markdown code block, which LLMs often return.
     """
-    base_url = os.getenv(env_var_name)
-    if not base_url:
-        return {"status": "error", "message": f"{env_var_name} environment variable is not set."}
-
-    try:
-        async with httpx.AsyncClient() as httpx_client:
-            result = await _invoke_a2a_agent(base_url, prompt_text, httpx_client)
-
-        return response_parser(result)
-    except httpx.RequestError as e:
-        return {"status": "error", "message": f"Network error calling agent at {env_var_name}: {e}"}
-    except Exception as e:
-        return {"status": "error", "message": f"An unexpected error occurred calling agent at {env_var_name}: {e}"}
-
-async def validate_haiku_with_external_agent(haiku: str) -> dict:
-    """
-    Calls an external A2A agent to validate a haiku.
-    """
-    base_url = os.getenv("HAIKU_VALIDATOR_AGENT_URL", "http://localhost:8002")
-    if not base_url:
-        return {"status": "error", "message": "HAIKU_VALIDATOR_AGENT_URL environment variable is not set."}
-
-    def _parse_validator_response(result: dict) -> dict:
-        """Parses the JSON response from the validator agent."""
-        if result["status"] != "success":
-            return result
-        validator_output_str = result.get("content")
-        if not validator_output_str:
-            return {"status": "error", "message": "Validator agent returned an empty response.", "raw_response": result}
-        try:
-            clean_json_str = _extract_json_from_markdown(validator_output_str)
-            return {"status": "success", "validation_result": json.loads(clean_json_str)}
-        except json.JSONDecodeError:
-            return {"status": "error", "message": "Failed to parse JSON from validator agent's response.", "raw_response": validator_output_str}
-
-    return await _generic_a2a_tool_handler("HAIKU_VALIDATOR_AGENT_URL", haiku, _parse_validator_response)
-
-async def call_utility_a2a(prompt: str) -> dict:
-    """Calls the external A2A utility agent with a given prompt."""
-    base_url = os.getenv("HAIKU_UTILITIES_AGENT_URL", "http://localhost:8002")
-    if not base_url:
-        return {"status": "error", "message": "HAIKU_UTILITIES_AGENT_URL environment variable is not set."}
-    
-    def _parse_utility_response(result: dict) -> dict:
-        """Handles the plain-text response from the utility agent."""
-        if result["status"] != "success":
-            return result
-        return {"status": "success", "result_text": result.get("content", "")}
-
-    return await _generic_a2a_tool_handler("HAIKU_UTILITIES_AGENT_URL", prompt, _parse_utility_response)
+    # Regex to find a JSON block, being lenient with the language specifier (e.g., ```json)
+    match = re.search(r"```(?:json)?\s*({.*})\s*```", text, re.DOTALL)
+    if match:
+        return match.group(1)
+    # If no markdown block is found, assume the whole string might be the JSON
+    return text

@@ -14,15 +14,15 @@ playground:
 	uv run adk web . --port 8501 --reload_agents
 
 # Deploy the agent remotely
-# Usage: make backend [IAP=true] [PORT=8080] [A2AVALIDATORURL=your-A2A-haiku-validator-url] [MCPSTOREURL=your-MCP-haiku-store-url]
+# Usage: make backend [IAP=true] [PORT=8080] [A2AVALIDATORURL=your-A2A-haiku-validator-url] [UTILITIESURL=your-haiku-utilities-url]
 # Set IAP=true to enable Identity-Aware Proxy, PORT to specify container port
 backend:
 	ENV_VARS="COMMIT_SHA='$(shell git rev-parse HEAD)'"; \
 	if [ -n "$(A2AVALIDATORURL)" ]; then \
 		ENV_VARS="$${ENV_VARS},HAIKU_VALIDATOR_AGENT_URL=$(A2AVALIDATORURL)"; \
 	fi; \
-	if [ -n "$(MCPSTOREURL)" ]; then \
-		ENV_VARS="$${ENV_VARS},MCP_HAIKU_STORE_SERVER_URL=$(MCPSTOREURL)"; \
+	if [ -n "$(UTILITIESURL)" ]; then \
+		ENV_VARS="$${ENV_VARS},MCP_HAIKU_STORE_SERVER_URL=$(UTILITIESURL)"; \
 	fi; \
 	PROJECT_ID=$$(gcloud config get-value project); \
 	gcloud beta run deploy haiku-app \

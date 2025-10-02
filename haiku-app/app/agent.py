@@ -17,7 +17,6 @@ import os
 import google.auth
 from google.adk.agents import Agent
 from google.adk.tools.agent_tool import AgentTool
-from google.adk.tools.mcp_tool import MCPToolset, StreamableHTTPConnectionParams
 
 _, project_id = google.auth.default()
 os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
@@ -27,7 +26,7 @@ os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "True")
 from .sub_agents.haiku_validator.agent import haiku_validator_agent
 
 from .tools import (
-   validate_haiku_with_external_agent,
+   call_validator_a2a,
    call_utility_a2a,
 )
 
@@ -43,42 +42,30 @@ If the user asks you to call any of the following utility functions, use the cal
 - Quieter: Convert the entire haiku to lowercase.
 - Spooky Case: Alternate the case of all letters in the haiku.
 - Make Choppy: Add a period after each word in the haiku.
-
 """
-
-LOCAL_LOUDER_PROMPT = "If the user asks you to say or repeat the haiku in a louder voice, use the louder_haiku tool."
 
 # For our haiku validator, we can use this toggle to switch between our embedded sub-agent validation within the ADK app,
 # or use an externally hosted A2A server, which we can call with a function tool
-SHOULD_USE_EXTERNAL_A2A_VALIDATOR = True
-haiku_validator_agent = validate_haiku_with_external_agent if SHOULD_USE_EXTERNAL_A2A_VALIDATOR else AgentTool(agent=haiku_validator_agent)
+SHOULD_USE_EXTERNAL_A2A_VALIDATOR = False
+haiku_validator_agent = call_validator_a2a if SHOULD_USE_EXTERNAL_A2A_VALIDATOR else AgentTool(agent=haiku_validator_agent)
 
 
 def louder_haiku(text: str) -> str:
     """Converts the entire text block to uppercase."""
     return text.upper()
 
-
 root_agent = Agent(
     name="root_agent",
     model="gemini-2.5-flash",
     instruction=PROMPT,
     tools=[
+        # Uncomment when needed
         # louder_haiku,
         
-        # Uncomment when ready
-        
+        # Uncomment when needed
         haiku_validator_agent,
 
-        # Uncomment when ready
+        # Uncomment when needed
         call_utility_a2a,
-        
-        # Uncomment when ready
-        
-        # MCPToolset(
-        #     connection_params=StreamableHTTPConnectionParams(
-        #         url=os.getenv("MCP_HAIKU_STORE_SERVER_URL", "http://localhost:8075/mcp")
-        #     )
-        # )
         ],
 )
