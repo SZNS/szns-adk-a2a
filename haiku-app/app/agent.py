@@ -1,17 +1,3 @@
-# Copyright 2025 Google LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 import os
 
 import google.auth
@@ -60,7 +46,7 @@ use the utilities_a2a_agent (if available, otherwise, respond that the utility f
 
 # For our haiku validator, we can use this toggle to switch between our embedded sub-agent validator within the ADK app,
 # or use an externally hosted A2A server
-SHOULD_USE_EXTERNAL_A2A_VALIDATOR = True
+SHOULD_USE_EXTERNAL_A2A_VALIDATOR = False
 validator_agent = validator_a2a_agent if SHOULD_USE_EXTERNAL_A2A_VALIDATOR else validator_local_agent
 
 def louder_haiku(text: str) -> str:

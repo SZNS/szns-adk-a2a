@@ -22,7 +22,7 @@ backend:
 		ENV_VARS="$${ENV_VARS},HAIKU_VALIDATOR_AGENT_URL=$(A2AVALIDATORURL)"; \
 	fi; \
 	if [ -n "$(UTILITIESURL)" ]; then \
-		ENV_VARS="$${ENV_VARS},MCP_HAIKU_STORE_SERVER_URL=$(UTILITIESURL)"; \
+		ENV_VARS="$${ENV_VARS},HAIKU_UTILITIES_AGENT_URL=$(UTILITIESURL)"; \
 	fi; \
 	PROJECT_ID=$$(gcloud config get-value project); \
 	gcloud beta run deploy haiku-app \
