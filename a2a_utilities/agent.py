@@ -61,7 +61,10 @@ region = os.getenv('GOOGLE_CLOUD_REGION', 'us-central1')
 project_number = os.getenv('GOOGLE_PROJECT_NUMBER')
 
 # Determine if running locally or in Cloud Run
-is_local = os.getenv('K_SERVICE') is None 
+is_local = os.getenv('K_SERVICE') is None
+
+if not is_local and not project_number:
+    raise ValueError("GOOGLE_PROJECT_NUMBER must be set for Cloud Run deployments, it can be found on the GCP Console Dashboard.")
 
 # If deploying to Cloud Run, pre-generate the host URL according to 
 # Cloud Run's URL structure for use in the A2A Agent Card

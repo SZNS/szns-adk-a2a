@@ -23,11 +23,12 @@ This sample uses the Agent Development Kit (ADK) to create a haiku utility agent
     uv pip install -r requirements.txt
     ```
 
-3. Create a `.env` file by coping the `.sample-env` and filling out the correct values:
+3. Create a `.env` file by copying the `.sample-env` and filling out the correct values:
 
     ```bash
     GOOGLE_API_KEY=<your_key>
     GOOGLE_CLOUD_PROJECT=<your_project>
+    GOOGLE_PROJECT_NUMBER=<your_project_number>
     GOOGLE_CLOUD_LOCATION=<your_region>
     GOOGLE_CLOUD_REGION=${GOOGLE_CLOUD_LOCATION}
     GEMINI_API_KEY=${GOOGLE_API_KEY}

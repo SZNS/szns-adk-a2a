@@ -169,7 +169,7 @@ async def main() -> None:
 
     # --- Print Results Table ---
     # Determine column widths
-    max_name_len = max(len(r['name']) for r in results)
+    max_name_len = max((len(r['name']) for r in results), default=0)
     col_width_name = max(max_name_len, len("Transformation")) + 2
 
     # Header
