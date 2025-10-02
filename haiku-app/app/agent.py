@@ -16,36 +16,29 @@ import os
 
 import google.auth
 from google.adk.agents import Agent
-from google.adk.tools.agent_tool import AgentTool
 from google.adk.agents.remote_a2a_agent import RemoteA2aAgent
 from google.adk.agents.remote_a2a_agent import AGENT_CARD_WELL_KNOWN_PATH
+from .sub_agents.haiku_validator.agent import haiku_validator_agent as validator_local_agent
 
 _, project_id = google.auth.default()
 os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
 os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "global")
 os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "True")
 
-from .sub_agents.haiku_validator.agent import haiku_validator_agent
-
-from .tools import (
-   call_validator_a2a,
-   call_utility_a2a,
-)
-
 validator_a2a_url = os.getenv("HAIKU_VALIDATOR_AGENT_URL", "http://localhost:8001")
 utilities_a2a_url = os.getenv("HAIKU_UTILITIES_AGENT_URL", "http://localhost:8002")
 
-validator_agent = RemoteA2aAgent(
-    name="validator_agent",
-    description="Agent that handles haiku validation.",
+validator_a2a_agent = RemoteA2aAgent(
+    name="validator_a2a_agent",
+    description="Remote A2A Agent that handles haiku validation.",
     agent_card=(
         f"{validator_a2a_url}/{AGENT_CARD_WELL_KNOWN_PATH}"
     ),
 )
 
-utilities_agent = RemoteA2aAgent(
-    name="utilities_agent",
-    description="Agent that handles utility functions.",
+utilities_a2a_agent = RemoteA2aAgent(
+    name="utilities_a2a_agent",
+    description="ARemote A2A Agent that handles haiku utility functions.",
     agent_card=(
         f"{utilities_a2a_url}/{AGENT_CARD_WELL_KNOWN_PATH}"
     ),
@@ -65,11 +58,10 @@ If the user asks you to call any of the following utility functions, use the cal
 - Make Choppy: Add a period after each word in the haiku.
 """
 
-# For our haiku validator, we can use this toggle to switch between our embedded sub-agent validation within the ADK app,
-# or use an externally hosted A2A server, which we can call with a function tool
+# For our haiku validator, we can use this toggle to switch between our embedded sub-agent validator within the ADK app,
+# or use an externally hosted A2A server
 SHOULD_USE_EXTERNAL_A2A_VALIDATOR = False
-haiku_validator_agent = call_validator_a2a if SHOULD_USE_EXTERNAL_A2A_VALIDATOR else AgentTool(agent=haiku_validator_agent)
-
+validator_agent = validator_a2a_agent if SHOULD_USE_EXTERNAL_A2A_VALIDATOR else validator_local_agent
 
 def louder_haiku(text: str) -> str:
     """Converts the entire text block to uppercase."""
@@ -82,12 +74,6 @@ root_agent = Agent(
     tools=[
         # Uncomment when needed
         # louder_haiku,
-        
-        # Uncomment when needed
-        #haiku_validator_agent,
-
-        # Uncomment when needed
-        #call_utility_a2a,
         ],
-    sub_agents=[validator_agent, utilities_agent],
+    sub_agents=[validator_agent, utilities_a2a_agent],
 )
