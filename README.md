@@ -93,7 +93,7 @@ To run the complete system, you'll need to run each of the three services in a s
       uvicorn agent:a2a_app --host localhost --port 8001
       ```
     - Take the localhost URL and port number and add it to your `.env` file as the `HAIKU_VALIDATOR_AGENT_URL` variable.
-    - Make sure `validator_agent` is uncommented in [`haiku-app/agent.py`](haiku-app/agent.py`)
+    - Make sure `validator_agent` is uncommented in [`haiku-app/agent.py`](haiku-app/agent.py)
     - Restart the `haiku-app` with `make playground`
     - Cloud Run deployment info at [`a2a_validator/README.md`](a2a_validator/README.md)
 
