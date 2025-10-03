@@ -1,7 +1,6 @@
-# Haiku Validator A2A Agent
+# Haiku Utilities A2A Agent
 
-
-This sample uses the Agent Development Kit (ADK) to create a haiku validator which communicates using A2A.
+This sample uses the Agent Development Kit (ADK) to create a haiku utility agent which communicates using A2A.
 
 ## Prerequisites
 
@@ -18,7 +17,7 @@ This sample uses the Agent Development Kit (ADK) to create a haiku validator whi
 1. Navigate to the samples directory:
 
     ```bash
-    cd a2a_validator
+    cd a2a_utilities
     ```
 
 2. Create a virtual environment and install requirements:
@@ -29,7 +28,7 @@ This sample uses the Agent Development Kit (ADK) to create a haiku validator whi
     uv pip install -r requirements.txt
     ```
 
-3. Create a `.env` file by coping the `.sample-env` and filling out the correct values:
+3. Create a `.env` file by copying the `.sample-env` and filling out the correct values:
 
     ```bash
     GOOGLE_API_KEY=<your_key>
@@ -43,7 +42,7 @@ This sample uses the Agent Development Kit (ADK) to create a haiku validator whi
 4. Run the A2A agent:
 
     ```bash
-    uv run uvicorn agent:a2a_app --host localhost --port 8001
+    uv run uvicorn agent:a2a_app --host localhost --port 8002
     ```
 
 5. Run the ADK Web Server
@@ -53,16 +52,16 @@ This sample uses the Agent Development Kit (ADK) to create a haiku validator whi
     adk web
     ```
 
-  In the Web UI, select the `a2a_validator` agent.
+  In the Web UI, select the `a2a_utilities` agent.
 
 ## Deploy to Google Cloud Run
 
 ```sh
-# Set project environment variable
-export GOOGLE_CLOUD_PROJECT=$(gcloud config get-value project)
+# Set the environment variables from your .env file into the terminal session
+source .env
 
-# Run deployment command in a2a_validator directory
-gcloud run deploy a2a-validator \
+# Run deployment command in a2a_utilities directory
+gcloud run deploy a2a-utilities \
     --port=8080 \
     --source=. \
     --allow-unauthenticated \

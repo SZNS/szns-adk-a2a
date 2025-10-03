@@ -6,14 +6,13 @@ authors = [
     {name = "Your Name", email = "your@email.com"},
 ]
 dependencies = [
-    "google-adk~=1.8.0",
     "opentelemetry-exporter-gcp-trace~=1.9.0",
     "google-cloud-logging~=3.11.4",
     "google-cloud-aiplatform[evaluation]~=1.106.0",
     "fastapi~=0.115.8",
     "uvicorn~=0.34.0",
     "psycopg2-binary>=2.9.10",
-    "google-adk[a2a]", # Added post starter pack generation for A2A
+    "google-adk[a2a]~=1.15.1", # Use version 1.15.1 and include A2A extras
 ]
 
 requires-python = ">=3.10,<3.14"
