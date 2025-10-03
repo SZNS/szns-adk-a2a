@@ -115,7 +115,7 @@ To run the complete system, you'll need to run each of the three services in a s
       uvicorn agent:a2a_app --host localhost --port 8002
       ```
     - Take the localhost URL and port number and add it to your `.env` file as the `HAIKU_UTILITIES_AGENT_URL` variable.
-    - Make sure `utilities_a2a_agent` is uncommented in [`haiku-app/agent.py`](haiku-app/agent.py`)
+    - Make sure `utilities_a2a_agent` is uncommented in [`haiku-app/agent.py`](haiku-app/agent.py)
     - Restart the `haiku-app` with `make playground`
     - Cloud Run deployment info at [`a2a_utilities/README.md`](a2a_utilities/README.md)
 
