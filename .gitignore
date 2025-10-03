@@ -214,7 +214,7 @@ deployment_metadata.json
 gradio_cached_examples/
 .gradio/
 
-# MCP specific
+# Database specific
 *.db
 
 # Scratch files
