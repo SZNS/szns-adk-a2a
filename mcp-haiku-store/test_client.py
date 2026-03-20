@@ -1,15 +1,18 @@
 import asyncio
+import json
 from fastmcp import Client
 
 client = Client("http://localhost:8075/mcp")
+
+def fmt(data):
+    return json.dumps(data, indent=2)
 
 async def call_create_haiku(text: str, score: int):
     """Calls the create_haiku tool."""
     async with client:
         result = await client.call_tool("create_haiku", {"text": text, "score": score})
         print("--- Create Haiku ---")
-        print(result)
-        # Access the 'data' attribute which holds the dictionary response
+        print(fmt(result.data))
         return result.data.get("id")
 
 async def call_search_haikus(query: str = None, min_score: int = None):
@@ -23,28 +26,28 @@ async def call_search_haikus(query: str = None, min_score: int = None):
     async with client:
         print(f"\n--- Searching Haikus (query='{query}', min_score={min_score}) ---")
         result = await client.call_tool("search_haikus", params)
-        print(result)
+        print(fmt(result.data))
 
 async def call_read_haiku(haiku_id: int):
     """Calls the read_haiku tool."""
     async with client:
         print(f"\n--- Reading Haiku (id={haiku_id}) ---")
         result = await client.call_tool("read_haiku", {"haiku_id": haiku_id})
-        print(result)
+        print(fmt(result.data))
 
 async def call_delete_haiku(haiku_id: int):
     """Calls the delete_haiku tool."""
     async with client:
         print(f"\n--- Deleting Haiku (id={haiku_id}) ---")
         result = await client.call_tool("delete_haiku", {"haiku_id": haiku_id})
-        print(result)
+        print(fmt(result.data))
 
 async def call_read_haikus(offset: int = 0, limit: int = 10):
     """Calls the read_haikus tool to see all haikus."""
     async with client:
         print("\n--- Reading All Haikus ---")
         result = await client.call_tool("read_haikus", {"offset": offset, "limit": limit})
-        print(result)
+        print(fmt(result.data))
 
 async def main():
     # Create a new haiku
