@@ -18,6 +18,7 @@ import google.auth
 from google.adk.agents import Agent
 from google.adk.agents.remote_a2a_agent import RemoteA2aAgent, AGENT_CARD_WELL_KNOWN_PATH
 from .sub_agents.haiku_validator.agent import haiku_validator_agent as validator_local_agent
+from google.adk.tools.mcp_tool import MCPToolset, StreamableHTTPConnectionParams
 
 _, project_id = google.auth.default()
 os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
@@ -74,6 +75,11 @@ root_agent = Agent(
     tools=[
         # Uncomment when needed
         # louder_haiku,
+        MCPToolset(
+            connection_params=StreamableHTTPConnectionParams(
+                url=os.getenv("MCP_HAIKU_STORE_SERVER_URL", "http://localhost:8075/mcp")
+            )
+        )
         ],
     sub_agents=[
         validator_agent, 
