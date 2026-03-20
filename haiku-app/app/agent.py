@@ -18,6 +18,7 @@ import google.auth
 from google.adk.agents import Agent
 from google.adk.agents.remote_a2a_agent import RemoteA2aAgent, AGENT_CARD_WELL_KNOWN_PATH
 from .sub_agents.haiku_validator.agent import haiku_validator_agent as validator_local_agent
+from .sub_agents.poetry_lookup.agent import poetry_lookup_agent
 from google.adk.tools.mcp_tool import MCPToolset, StreamableHTTPConnectionParams
 
 _, project_id = google.auth.default()
@@ -51,12 +52,15 @@ Do your best to follow the 5-7-5 syllable structure.
 
 If the user asks you to validate the haiku, use the validator_agent.
 
-If the user asks you to call any of the following utility functions, 
+If the user asks you to call any of the following utility functions,
 use the utilities_a2a_agent (if available, otherwise, respond that the utility functions are not available):
 - Louder: Convert the entire haiku to uppercase.
 - Quieter: Convert the entire haiku to lowercase.
 - Spooky Case: Alternate the case of all letters in the haiku.
 - Make Choppy: Add a period after each word in the haiku.
+
+If the user asks to look up poetry, find poems by a specific author, search for poems by title,
+or wants random poem inspiration, use the poetry_lookup_agent.
 """
 
 # For our haiku validator, we can use this toggle to switch between our embedded sub-agent validator within the ADK app,
@@ -82,8 +86,9 @@ root_agent = Agent(
         )
         ],
     sub_agents=[
-        validator_agent, 
-        
+        validator_agent,
+        poetry_lookup_agent,
+
         # Uncomment when needed
         # utilities_a2a_agent
         ],
