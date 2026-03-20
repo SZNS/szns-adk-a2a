@@ -5,7 +5,7 @@ import os
 import httpx
 from typing import Any, Dict, List, Optional
 
-from sqlmodel import Field, Session, SQLModel, create_engine, select, func
+from sqlmodel import Field, Session, SQLModel, create_engine, select
 from fastmcp import FastMCP
 
 logger = logging.getLogger(__name__)
@@ -44,21 +44,17 @@ def create_db_and_tables():
 mcp = FastMCP("Haiku Store")
 
 @mcp.tool
-def create_haiku(text: str, score: int) -> Dict[str, Any]:
+def create_haiku(text: str, score: int) -> Haiku:
     """
-    Create a new haiku, determine its ID, and add it to the database.
-    Returns a dictionary representing the new haiku.
+    Create a new haiku and add it to the database.
+    Returns the new haiku object.
     """
     with Session(engine) as session:
-        # Determine the next primary ID
-        max_id = session.exec(select(func.max(Haiku.id))).one_or_none()
-        next_id = (max_id or 0) + 1
-        
-        haiku = Haiku(id=next_id, text=text, score=score)
+        haiku = Haiku(text=text, score=score)
         session.add(haiku)
         session.commit()
         session.refresh(haiku)
-        return {"id": haiku.id, "text": haiku.text, "score": haiku.score}
+        return haiku
 
 @mcp.tool
 def read_haikus(offset: int = 0, limit: int = 10) -> List[Haiku]:
