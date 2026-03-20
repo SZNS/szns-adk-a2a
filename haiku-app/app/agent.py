@@ -12,11 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import asyncio
 import os
 
 import google.auth
+import google.genai.types as genai_types
+from google import genai
 from google.adk.agents import Agent
 from google.adk.agents.remote_a2a_agent import RemoteA2aAgent, AGENT_CARD_WELL_KNOWN_PATH
+from google.adk.tools import ToolContext
+from google.genai.types import GenerateImagesConfig
 from .sub_agents.haiku_validator.agent import haiku_validator_agent as validator_local_agent
 from .sub_agents.poetry_lookup.agent import poetry_lookup_agent
 from google.adk.tools.mcp_tool import MCPToolset, StreamableHTTPConnectionParams
@@ -61,6 +66,14 @@ use the utilities_a2a_agent (if available, otherwise, respond that the utility f
 
 If the user asks to look up poetry, find poems by a specific author, search for poems by title,
 or wants random poem inspiration, use the poetry_lookup_agent.
+
+You have access to a Haiku Store where you can save, browse, search, and delete haikus.
+Use it to save haikus the user likes, retrieve previously saved haikus, or search by text or minimum score.
+
+After generating a haiku, ask the user if they would like to validate it, generate a visual image inspired by it,
+or save it to the Haiku Store.
+If the user wants an image, craft a descriptive visual prompt capturing the haiku's imagery and mood,
+then use the generate_haiku_image tool.
 """
 
 # For our haiku validator, we can use this toggle to switch between our embedded sub-agent validator within the ADK app,
@@ -72,13 +85,39 @@ def louder_haiku(text: str) -> str:
     """Converts the entire text block to uppercase."""
     return text.upper()
 
+
+async def generate_haiku_image(prompt: str, tool_context: ToolContext) -> dict:
+    """Generate an image inspired by a haiku.
+
+    Args:
+        prompt: A descriptive visual prompt based on the haiku's imagery and mood.
+    """
+    try:
+        client = genai.Client()
+        response = await asyncio.to_thread(
+            client.models.generate_images,
+            model="imagen-3.0-generate-001",
+            prompt=prompt,
+            config=GenerateImagesConfig(number_of_images=1),
+        )
+        image_bytes = response.generated_images[0].image.image_bytes
+        artifact = genai_types.Part.from_bytes(
+            data=image_bytes, mime_type="image/png"
+        )
+        version = await tool_context.save_artifact(
+            filename="haiku_image.png", artifact=artifact
+        )
+        return {"status": "success", "filename": "haiku_image.png", "version": version}
+    except Exception as e:
+        return {"status": "error", "message": f"Failed to generate image: {e}"}
+
 root_agent = Agent(
     name="root_agent",
     model="gemini-2.5-flash",
     instruction=PROMPT,
     tools=[
-        # Uncomment when needed
-        # louder_haiku,
+        louder_haiku,
+        generate_haiku_image,
         MCPToolset(
             connection_params=StreamableHTTPConnectionParams(
                 url=os.getenv("MCP_HAIKU_STORE_SERVER_URL", "http://localhost:8075/mcp")
