@@ -5,7 +5,7 @@ from fastmcp import Client
 client = Client("http://localhost:8075/mcp")
 
 def fmt(data):
-    return json.dumps(data, indent=2)
+    return json.dumps(data, indent=2, default=str)
 
 async def call_create_haiku(text: str, score: int):
     """Calls the create_haiku tool."""
@@ -13,7 +13,8 @@ async def call_create_haiku(text: str, score: int):
         result = await client.call_tool("create_haiku", {"text": text, "score": score})
         print("--- Create Haiku ---")
         print(fmt(result.data))
-        return result.data.get("id")
+        data = result.data
+        return data.id if hasattr(data, "id") else data.get("id")
 
 async def call_search_haikus(query: str = None, min_score: int = None):
     """Calls the search_haikus tool."""
