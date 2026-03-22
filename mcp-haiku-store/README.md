@@ -1,4 +1,4 @@
-# ADK Agent
+# MCP Haiku Repository
 
 This sample uses FastMCP to create a simple REST API to manage haikus in-memory with a SQLite database.
 
