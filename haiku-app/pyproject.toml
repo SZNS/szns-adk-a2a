@@ -13,6 +13,7 @@ dependencies = [
     "uvicorn~=0.34.0",
     "psycopg2-binary>=2.9.10",
     "google-adk[a2a]~=1.15.1", # Use version 1.15.1 and include A2A extras
+    "httpx>=0.27.0",
 ]
 
 requires-python = ">=3.10,<3.14"
